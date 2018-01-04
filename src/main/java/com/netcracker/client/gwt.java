@@ -1,8 +1,11 @@
 package com.netcracker.client;
 
+import com.google.gwt.cell.client.ClickableTextCell;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.ColumnSortEvent;
+import com.google.gwt.user.cellview.client.Header;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.view.client.CellPreviewEvent;
 import com.google.gwt.view.client.ListDataProvider;
 import com.netcracker.shared.Book;
 import com.netcracker.shared.FieldVerifier;
@@ -126,6 +129,7 @@ public class gwt implements EntryPoint {
     table.addColumn(pageNumColumn, "Pages");
     table.addColumn(yearColumn, "Year");
     table.addColumn(dateAddedColumn, "Date Added");
+
 
 
       ColumnSortEvent.ListHandler<Book> columnSortHandler = new ColumnSortEvent.ListHandler<Book>(list);
@@ -331,19 +335,37 @@ public class gwt implements EntryPoint {
                     loadErrorLabel.setText("Something went wrong");
                 }});
 
-
-            //list.remove(table.getKeyboardSelectedRow());
         }
     }
 
-    // Add a handler to add, delete and send a book
+      table.addCellPreviewHandler(new CellPreviewEvent.Handler<Book>() {
 
-    SendHandler sendHandler = new SendHandler();
-    DeleteHandler deleteHandler = new DeleteHandler();
-    AddHandler addHandler = new AddHandler();
-    sendButton.addClickHandler(sendHandler);
-    addButton.addClickHandler(addHandler);
-    deleteButton.addClickHandler(deleteHandler);
+          @Override
+          public void onCellPreview(CellPreviewEvent<Book> event) {
+              boolean isClick = "click".equals(event.getNativeEvent().getType());
+              if (isClick) {
+                  service.sortBooks(table.getKeyboardSelectedColumn(),new MethodCallback<List<Book>>() {
+
+                      public void onSuccess(Method method, List<Book> response) {
+                          books = response;
+                          list.clear();
+                          for (Book book : books) {
+                              list.add(book);
+                          }
+                      }
+
+                      public void onFailure(Method method, Throwable exception) {
+                          loadErrorLabel.setText("Something went wrong");
+                      }});
+              }
+          }
+      });
+
+    // Add a handler to add, delete and send a book
+    sendButton.addClickHandler(new SendHandler());
+    addButton.addClickHandler(new AddHandler());
+    deleteButton.addClickHandler(new DeleteHandler());
+
 
   }
 }
